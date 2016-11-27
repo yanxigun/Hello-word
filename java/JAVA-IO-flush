@@ -1,0 +1,39 @@
+前言： 
+   大家在使用Java IO流中OutputStream、PrintWriter ……时，会经常用到它的flush()方法。
+一．为什么要flush：
+  与在网络硬件中缓存一样，流还可以在软件中得到缓存，即直接在Java代码中缓存。
+  这可以通过BufferedOutputStream或BufferedWriter 链接到底层流上来实现。
+  因此，在写完数据时，flush就显得尤为重要。
+例如：
+
+ 
+  上图中WEB服务器通过输出流向客户端响应了一个300字节的信息，但是，这时的输出流有一个1024字节的缓冲区。
+  所以，输出流就一直等着WEB服务器继续向客户端响应信 息，当WEB服务器的响应信息把输出流中的缓冲区填满时，
+  这时，输出流才向WEB客户端响应消息。为了解决这种尴尬的局面，flush()方法出现了。
+  flush()方法可以强迫输出流(或缓冲的流)发送数据，即使此时缓冲区还没有填满，以此来打破这种死锁的状态。
+  当我们使用输出流发送数据时，当数据不能填满输出流的缓冲区时，这时，数据就会被存储在输出流的缓冲区中。
+  如果，我们这个时候调用关闭(close)输出流，存储在输出流的缓冲区中的数据就会丢失。所以说，关闭(close)输出流时，
+  应先刷新(flush)换冲的输出流，话句话说就是：“迫使所有缓冲的输出数据被写出到底层输出流中”。
+ 
+二．解读flush()源码：
+下面以BufferedOutputStream类为例：
+Java代码  
+publicclass BufferedOutputStream extends FilterOutputStream  
+{     
+     publicsynchronizedvoid flush()  throws IOException  
+     {  
+        flushBuffer();  
+        out.flush();  
+     }  
+  
+    privatevoid flushBuffer()  throws IOException  
+  
+    {  
+        if(count > 0)  
+        {  
+            out.write(buf, 0, count);  
+            count = 0;  
+        }  
+     }  
+}  
+ 看到这里大家明白了吧，其实flush()也是通过out.write()将数据写入底层输出流的。
